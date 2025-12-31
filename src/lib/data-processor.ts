@@ -31,6 +31,19 @@ export interface ParseDebugInfo {
 }
 
 /**
+ * Get raw speed value (before any processing) for debugging
+ */
+function getRawSpeed(r: FITRecord): number {
+  if (r.enhanced_speed !== undefined && r.enhanced_speed > 0) {
+    return r.enhanced_speed > 100 ? r.enhanced_speed / 1000 : r.enhanced_speed;
+  }
+  if (r.speed !== undefined && r.speed > 0) {
+    return r.speed > 100 ? r.speed / 1000 : r.speed;
+  }
+  return 0;
+}
+
+/**
  * Analyze raw records for debugging
  */
 export function analyzeRawRecords(records: FITRecord[]): ParseDebugInfo {
@@ -44,7 +57,7 @@ export function analyzeRawRecords(records: FITRecord[]): ParseDebugInfo {
   let recordsWithPower = 0;
 
   for (const r of records) {
-    const speed = r.enhanced_speed ?? (r.speed ? r.speed / 1000 : 0);
+    const speed = getRawSpeed(r);
     const gct = r.stance_time ?? r.ground_time ?? 0;
 
     if (speed > 0) {
@@ -74,6 +87,29 @@ export function analyzeRawRecords(records: FITRecord[]): ParseDebugInfo {
 }
 
 /**
+ * Get speed in m/s from a FIT record
+ * Both speed and enhanced_speed have scale factor 1000 in FIT SDK
+ */
+function getSpeedMs(r: FITRecord): number {
+  // enhanced_speed is uint32 with scale 1000 (value in mm/s, divide by 1000 for m/s)
+  if (r.enhanced_speed !== undefined && r.enhanced_speed > 0) {
+    // Check if value seems to be already in m/s (< 30) or needs scaling (> 100)
+    if (r.enhanced_speed > 100) {
+      return r.enhanced_speed / 1000;
+    }
+    return r.enhanced_speed;
+  }
+  // speed is uint16 with scale 1000 (value in mm/s)
+  if (r.speed !== undefined && r.speed > 0) {
+    if (r.speed > 100) {
+      return r.speed / 1000;
+    }
+    return r.speed;
+  }
+  return 0;
+}
+
+/**
  * Process raw FIT records into running data points
  * Now works with or without running dynamics data
  */
@@ -81,11 +117,11 @@ export function processRecords(records: FITRecord[]): RunningDataPoint[] {
   return records
     .filter((r) => {
       // Only require speed - running dynamics are optional
-      const speed = r.enhanced_speed ?? (r.speed ? r.speed / 1000 : 0);
+      const speed = getSpeedMs(r);
       return speed > 0.5; // Minimum running speed (very slow jog)
     })
     .map((r, idx) => {
-      const speed = r.enhanced_speed ?? (r.speed ? r.speed / 1000 : 0);
+      const speed = getSpeedMs(r);
       const cadence = r.cadence ? (r.cadence + (r.fractional_cadence ?? 0)) * 2 : null;
 
       // Vertical oscillation: prefer Garmin, fallback to Stryd

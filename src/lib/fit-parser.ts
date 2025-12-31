@@ -155,15 +155,18 @@ export class FITParser {
     this.offset++;
 
     // Check for compressed timestamp header
+    // These use bits 5-6 for local message type (0-3 only)
     if ((recordHeader & FIT_COMPRESSED_TIMESTAMP) !== 0) {
       const localMessageType = (recordHeader >> 5) & 0x03;
       const def = this.definitions.get(localMessageType);
       if (def) {
+        // Parse compressed timestamp record as regular data message
         return this.readDataMessage(def, recordHeader);
       }
       return null;
     }
 
+    // Normal header - check if it's a definition or data message
     const isDefinition = (recordHeader & FIT_MESSAGE_TYPE_DEFINITION) !== 0;
     const hasDeveloperData = (recordHeader & FIT_MESSAGE_TYPE_DEV_FIELDS) !== 0;
     const localMessageType = recordHeader & 0x0F;
