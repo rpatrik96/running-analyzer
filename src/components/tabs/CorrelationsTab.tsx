@@ -12,16 +12,48 @@ export function CorrelationsTab({ data }: CorrelationsTabProps) {
     <div className="space-y-6">
       <div className="bg-white rounded-xl p-6 shadow-sm">
         <h2 className="text-lg font-semibold mb-4">Running Dynamics Correlations</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <CorrelationBadge label="GCT vs Speed" value={correlations.gctSpeed} />
-          <CorrelationBadge label="GCT vs Cadence" value={correlations.gctCadence} />
-          <CorrelationBadge label="Step Length vs Speed" value={correlations.slSpeed} />
-          <CorrelationBadge label="Step Length vs Cadence" value={correlations.slCadence} />
-          <CorrelationBadge label="VO vs Speed" value={correlations.voSpeed} />
-          <CorrelationBadge label="VR vs Speed" value={correlations.vrSpeed} />
-          <CorrelationBadge label="Cadence vs Speed" value={correlations.cadenceSpeed} />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <CorrelationBadge
+            label="GCT vs Speed"
+            value={correlations.gctSpeed}
+            interpretation="Should be strongly negative (r < -0.7). Faster running naturally reduces ground contact time. A weak correlation may indicate inefficient running mechanics."
+          />
+          <CorrelationBadge
+            label="GCT vs Cadence"
+            value={correlations.gctCadence}
+            interpretation="Typically negative: higher cadence means less time on the ground per step."
+          />
+          <CorrelationBadge
+            label="Step Length vs Speed"
+            value={correlations.slSpeed}
+            interpretation="A positive correlation indicates stride-length dominant running. You increase speed primarily by taking longer steps."
+          />
+          <CorrelationBadge
+            label="Step Length vs Cadence"
+            value={correlations.slCadence}
+            interpretation="Shows how step length and cadence interact. A negative correlation is common as runners trade off between the two."
+          />
+          <CorrelationBadge
+            label="VO vs Speed"
+            value={correlations.voSpeed}
+            interpretation="Vertical oscillation often increases with speed. Very strong positive may indicate bouncy running form."
+          />
+          <CorrelationBadge
+            label="VR vs Speed"
+            value={correlations.vrSpeed}
+            interpretation="Ideally negative: you become more efficient (less vertical oscillation relative to forward motion) at faster paces."
+          />
+          <CorrelationBadge
+            label="Cadence vs Speed"
+            value={correlations.cadenceSpeed}
+            interpretation="A positive correlation indicates cadence-dominant running. Elite runners often maintain consistent cadence and increase speed through stride length."
+          />
           {correlations.hrSpeed !== 0 && (
-            <CorrelationBadge label="HR vs Speed" value={correlations.hrSpeed} />
+            <CorrelationBadge
+              label="HR vs Speed"
+              value={correlations.hrSpeed}
+              interpretation="Typically positive: faster running requires more effort. A weak correlation may indicate cardiac drift or variable intensity."
+            />
           )}
         </div>
       </div>
@@ -34,71 +66,31 @@ export function CorrelationsTab({ data }: CorrelationsTabProps) {
               Stryd
             </span>
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {correlations.powerSpeed !== 0 && (
-              <CorrelationBadge label="Power vs Speed" value={correlations.powerSpeed} />
+              <CorrelationBadge
+                label="Power vs Speed"
+                value={correlations.powerSpeed}
+                interpretation="Should be strongly positive. Power output increases with speed. A weak correlation may indicate pacing inconsistencies."
+              />
             )}
             {correlations.lssSpeed !== 0 && (
-              <CorrelationBadge label="LSS vs Speed" value={correlations.lssSpeed} />
+              <CorrelationBadge
+                label="LSS vs Speed"
+                value={correlations.lssSpeed}
+                interpretation="Leg Spring Stiffness should be positively correlated with speed. Higher stiffness at faster paces indicates good elastic energy return."
+              />
             )}
             {correlations.formPowerSpeed !== 0 && (
-              <CorrelationBadge label="Form Power vs Speed" value={correlations.formPowerSpeed} />
+              <CorrelationBadge
+                label="Form Power vs Speed"
+                value={correlations.formPowerSpeed}
+                interpretation="Form power (energy lost to vertical movement) typically increases with speed but should be a smaller proportion of total power."
+              />
             )}
           </div>
         </div>
       )}
-
-      <div className="bg-white rounded-xl p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Interpretation Guide</h2>
-        <div className="space-y-4 text-sm">
-          <div className="p-4 bg-blue-50 rounded-lg">
-            <h3 className="font-medium text-blue-900 mb-2">GCT vs Speed</h3>
-            <p className="text-blue-800">
-              Should be <strong>strongly negative</strong> (r {'<'} -0.7). Faster running naturally
-              reduces ground contact time. A weak correlation may indicate inefficient running
-              mechanics that don't adapt well to pace changes.
-            </p>
-          </div>
-
-          <div className="p-4 bg-green-50 rounded-lg">
-            <h3 className="font-medium text-green-900 mb-2">Step Length vs Speed</h3>
-            <p className="text-green-800">
-              A <strong>positive correlation</strong> indicates stride-length dominant running. You
-              increase speed primarily by taking longer steps. Compare with Cadence vs Speed to
-              understand your running style.
-            </p>
-          </div>
-
-          <div className="p-4 bg-yellow-50 rounded-lg">
-            <h3 className="font-medium text-yellow-900 mb-2">Cadence vs Speed</h3>
-            <p className="text-yellow-800">
-              A <strong>positive correlation</strong> indicates cadence-dominant running. Elite
-              runners often maintain consistent cadence across paces and increase speed through
-              stride length.
-            </p>
-          </div>
-
-          <div className="p-4 bg-purple-50 rounded-lg">
-            <h3 className="font-medium text-purple-900 mb-2">VR vs Speed</h3>
-            <p className="text-purple-800">
-              Ideally <strong>negative</strong>: you become more efficient (less vertical
-              oscillation relative to forward motion) at faster paces. A positive correlation may
-              indicate you "bounce" more when running fast.
-            </p>
-          </div>
-
-          {hasStrydData && (
-            <div className="p-4 bg-pink-50 rounded-lg">
-              <h3 className="font-medium text-pink-900 mb-2">LSS vs Speed</h3>
-              <p className="text-pink-800">
-                Leg Spring Stiffness should be <strong>positively correlated</strong> with speed.
-                Higher stiffness at faster paces indicates good elastic energy return in your
-                muscles and tendons.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
 
       <div className="bg-white rounded-xl p-6 shadow-sm">
         <h2 className="text-lg font-semibold mb-4">Correlation Strength Reference</h2>
