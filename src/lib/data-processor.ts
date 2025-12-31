@@ -110,10 +110,81 @@ function getSpeedMs(r: FITRecord): number {
 }
 
 /**
+ * Get distance in km from raw FIT value
+ * FIT SDK: distance has scale 100, units m
+ * So raw_value / 100 = meters, / 1000 = km
+ */
+function getDistanceKm(rawDistance: number | undefined): number | null {
+  if (rawDistance === undefined || rawDistance === 0) return null;
+  // Raw value is in centimeters (scale 100 means divide by 100 to get meters)
+  return rawDistance / 100 / 1000; // cm -> m -> km
+}
+
+/**
+ * Get GCT in ms from raw FIT value
+ * FIT SDK: stance_time has scale 10, units ms
+ * So raw_value / 10 = milliseconds
+ */
+function getGctMs(rawGct: number | undefined): number | null {
+  if (rawGct === undefined || rawGct === 0) return null;
+  // Raw value is in 0.1ms (scale 10)
+  const gctMs = rawGct / 10;
+  // Validate reasonable range for running (150-400ms)
+  if (gctMs >= 150 && gctMs <= 400) {
+    return gctMs;
+  }
+  return null;
+}
+
+/**
+ * Get vertical oscillation in cm from raw FIT value
+ * FIT SDK: vertical_oscillation has scale 100, units mm
+ * Raw value / 100 = mm, / 10 = cm
+ */
+function getVOCm(rawVO: number | undefined): number | null {
+  if (rawVO === undefined || rawVO === 0) return null;
+  // Raw value is in 0.1mm (scale 100 means divide by 100 to get mm)
+  // Then divide by 10 to get cm
+  return rawVO / 100 / 10; // 0.1mm -> mm -> cm
+}
+
+/**
+ * Get step length in mm from raw FIT value
+ * FIT SDK: step_length has scale 10, units mm
+ */
+function getStepLengthMm(rawSL: number | undefined): number | null {
+  if (rawSL === undefined || rawSL === 0) return null;
+  // Raw value is in 0.1mm (scale 10)
+  return rawSL / 10;
+}
+
+/**
+ * Get vertical ratio as percentage from raw FIT value
+ * FIT SDK: vertical_ratio has scale 100, units percent
+ */
+function getVerticalRatioPercent(rawVR: number | undefined): number | null {
+  if (rawVR === undefined || rawVR === 0) return null;
+  // Raw value is in 0.01% (scale 100)
+  return rawVR / 100;
+}
+
+/**
+ * Get stance time balance as percentage from raw FIT value
+ * FIT SDK: stance_time_balance has scale 100, units percent
+ */
+function getStanceTimeBalancePercent(rawBalance: number | undefined): number | null {
+  if (rawBalance === undefined || rawBalance === 0) return null;
+  // Raw value is in 0.01% (scale 100)
+  return rawBalance / 100;
+}
+
+/**
  * Process raw FIT records into running data points
  * Now works with or without running dynamics data
  */
 export function processRecords(records: FITRecord[]): RunningDataPoint[] {
+  let lastValidDistance = 0;
+
   return records
     .filter((r) => {
       // Only require speed - running dynamics are optional
@@ -124,29 +195,53 @@ export function processRecords(records: FITRecord[]): RunningDataPoint[] {
       const speed = getSpeedMs(r);
       const cadence = r.cadence ? (r.cadence + (r.fractional_cadence ?? 0)) * 2 : null;
 
-      // Vertical oscillation: prefer Garmin, fallback to Stryd
-      const vo = r.vertical_oscillation
-        ? r.vertical_oscillation / 10 // Convert to cm
-        : r.vertical_oscillation_stryd ?? null;
+      // Distance in km
+      const distanceKm = getDistanceKm(r.distance);
+      if (distanceKm !== null) {
+        lastValidDistance = distanceKm;
+      }
 
-      // Ground contact time: prefer Garmin stance_time, fallback to Stryd ground_time
-      const rawGct = r.stance_time ?? r.ground_time ?? null;
-      // Validate GCT is in reasonable range (100-500ms)
-      const gct = rawGct !== null && rawGct > 100 && rawGct < 500 ? rawGct : null;
+      // Vertical oscillation in cm
+      const vo = getVOCm(r.vertical_oscillation) ?? r.vertical_oscillation_stryd ?? null;
 
-      // Step length
-      const sl = r.step_length ?? null;
+      // Ground contact time in ms
+      const gct = getGctMs(r.stance_time) ?? getGctMs(r.ground_time) ?? null;
 
-      // Vertical ratio: calculate if not provided
-      const vr = r.vertical_ratio ?? (vo && sl ? ((vo * 10) / sl) * 100 : null);
+      // Step length in mm
+      const sl = getStepLengthMm(r.step_length);
+
+      // Vertical ratio as percentage
+      let vr = getVerticalRatioPercent(r.vertical_ratio);
+      // Calculate if not provided (VO in cm, SL in mm)
+      if (vr === null && vo !== null && sl !== null && sl > 0) {
+        // VR = (VO in mm) / (SL in mm) * 100
+        vr = ((vo * 10) / sl) * 100;
+      }
+
+      // GCT Balance
+      const gctBalance = getStanceTimeBalancePercent(r.stance_time_balance);
 
       // Power: prefer Stryd power, fallback to Garmin power
       const power = r.stryd_power ?? r.power ?? null;
 
+      // LSS from developer fields (check common dev field patterns)
+      let lss = r.leg_spring_stiffness ?? null;
+      // Check for LSS in developer fields (dev_0_9 is common for Stryd LSS)
+      for (const key of Object.keys(r)) {
+        if (key.startsWith('dev_') && lss === null) {
+          const val = r[key];
+          // LSS is typically 7-15 kN/m
+          if (typeof val === 'number' && val >= 5 && val <= 20) {
+            lss = val;
+            break;
+          }
+        }
+      }
+
       return {
         idx,
         timestamp: r.timestamp ?? idx,
-        distance: r.distance ? r.distance / 1000 : idx * speed / 1000,
+        distance: distanceKm ?? lastValidDistance,
         speed,
         pace: speed > 0 ? 1000 / (speed * 60) : null, // min/km
         gct: gct ?? 0, // Use 0 as placeholder for missing GCT
@@ -154,11 +249,11 @@ export function processRecords(records: FITRecord[]): RunningDataPoint[] {
         sl,
         cadence,
         vr,
-        gctBalance: r.stance_time_balance ?? null,
+        gctBalance,
         hr: r.heart_rate ?? null,
         power,
         formPower: r.form_power ?? null,
-        lss: r.leg_spring_stiffness ?? null,
+        lss,
         airPower: r.air_power ?? null,
         altitude: r.enhanced_altitude ?? r.altitude ?? r.elevation ?? null,
         impactLoadingRate: r.impact_loading_rate ?? null,
