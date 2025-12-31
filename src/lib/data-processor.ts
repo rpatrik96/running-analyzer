@@ -194,7 +194,10 @@ export function processRecords(records: FITRecord[]): RunningDataPoint[] {
     })
     .map((r, idx) => {
       const speed = getSpeedMs(r);
-      const cadence = r.cadence ? (r.cadence + (r.fractional_cadence ?? 0)) * 2 : null;
+      // Cadence: raw value is half-cadence (single leg), double to get full spm
+      // fractional_cadence has scale 128, so divide by 128 before adding
+      const fractional = (r.fractional_cadence ?? 0) / 128;
+      const cadence = r.cadence ? (r.cadence + fractional) * 2 : null;
 
       // Distance in km
       const distanceKm = getDistanceKm(r.distance);

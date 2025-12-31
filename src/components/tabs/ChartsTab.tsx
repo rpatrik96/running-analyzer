@@ -17,12 +17,22 @@ interface ChartsTabProps {
   data: AnalysisResult;
 }
 
+// Format pace from decimal minutes to MM:SS
+function formatPace(pace: number | null): string {
+  if (!pace || pace > 15 || pace < 2) return '--:--';
+  const minutes = Math.floor(pace);
+  const seconds = Math.round((pace % 1) * 60);
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
 export function ChartsTab({ data }: ChartsTabProps) {
   const { processed, correlations, hasStrydData } = data;
 
-  // Downsample for better performance
+  // Downsample for better performance and filter for valid pace
   const chartData = processed.filter((_, i) => i % 5 === 0);
-  const scatterData = processed.filter((_, i) => i % 3 === 0);
+  const scatterData = processed
+    .filter((_, i) => i % 3 === 0)
+    .filter(d => d.pace !== null && d.pace > 2 && d.pace < 15);
 
   return (
     <div className="space-y-6">
@@ -54,25 +64,26 @@ export function ChartsTab({ data }: ChartsTabProps) {
         </ResponsiveContainer>
       </div>
 
-      {/* GCT vs Speed */}
+      {/* GCT vs Pace */}
       <div className="bg-white rounded-xl p-6 shadow-sm">
         <h3 className="font-semibold mb-4">
-          GCT vs Speed
+          GCT vs Pace
           <span className="ml-2 text-sm font-normal text-gray-500">
             r = {correlations.gctSpeed.toFixed(3)}
           </span>
         </h3>
         <p className="text-xs text-gray-500 mb-4">
-          Should be strongly negative (faster pace = less ground contact time)
+          Should be strongly positive (slower pace = more ground contact time)
         </p>
         <ResponsiveContainer width="100%" height={300}>
           <ScatterChart>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
-              dataKey="speed"
-              name="Speed"
-              domain={['dataMin - 0.2', 'dataMax + 0.2']}
-              label={{ value: 'Speed (m/s)', position: 'bottom', offset: -5 }}
+              dataKey="pace"
+              name="Pace"
+              domain={['dataMin - 0.3', 'dataMax + 0.3']}
+              tickFormatter={formatPace}
+              label={{ value: 'Pace (min/km)', position: 'bottom', offset: -5 }}
             />
             <YAxis
               dataKey="gct"
@@ -82,8 +93,8 @@ export function ChartsTab({ data }: ChartsTabProps) {
             />
             <Tooltip
               formatter={(value: number, name: string) => [
-                name === 'GCT' ? `${value.toFixed(0)} ms` : `${value.toFixed(2)} m/s`,
-                name,
+                name === 'GCT' ? `${value.toFixed(0)} ms` : formatPace(value) + '/km',
+                name === 'GCT' ? 'GCT' : 'Pace',
               ]}
             />
             <Scatter data={scatterData} fill="#3b82f6" fillOpacity={0.6} />
@@ -91,24 +102,25 @@ export function ChartsTab({ data }: ChartsTabProps) {
         </ResponsiveContainer>
       </div>
 
-      {/* Step Length vs Speed */}
+      {/* Step Length vs Pace */}
       <div className="bg-white rounded-xl p-6 shadow-sm">
         <h3 className="font-semibold mb-4">
-          Step Length vs Speed
+          Step Length vs Pace
           <span className="ml-2 text-sm font-normal text-gray-500">
             r = {correlations.slSpeed.toFixed(3)}
           </span>
         </h3>
         <p className="text-xs text-gray-500 mb-4">
-          Positive correlation indicates stride-length dominant running style
+          Negative correlation indicates stride-length dominant running style
         </p>
         <ResponsiveContainer width="100%" height={300}>
           <ScatterChart>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
-              dataKey="speed"
-              domain={['dataMin - 0.2', 'dataMax + 0.2']}
-              label={{ value: 'Speed (m/s)', position: 'bottom', offset: -5 }}
+              dataKey="pace"
+              domain={['dataMin - 0.3', 'dataMax + 0.3']}
+              tickFormatter={formatPace}
+              label={{ value: 'Pace (min/km)', position: 'bottom', offset: -5 }}
             />
             <YAxis
               dataKey="sl"
@@ -117,33 +129,34 @@ export function ChartsTab({ data }: ChartsTabProps) {
             />
             <Tooltip
               formatter={(value: number, name: string) => [
-                name === 'sl' ? `${value.toFixed(0)} mm` : `${value.toFixed(2)} m/s`,
-                name === 'sl' ? 'Step Length' : 'Speed',
+                name === 'sl' ? `${value.toFixed(0)} mm` : formatPace(value) + '/km',
+                name === 'sl' ? 'Step Length' : 'Pace',
               ]}
             />
-            <Scatter data={scatterData} fill="#10b981" fillOpacity={0.6} />
+            <Scatter data={scatterData.filter(d => d.sl !== null)} fill="#10b981" fillOpacity={0.6} />
           </ScatterChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Cadence vs Speed */}
+      {/* Cadence vs Pace */}
       <div className="bg-white rounded-xl p-6 shadow-sm">
         <h3 className="font-semibold mb-4">
-          Cadence vs Speed
+          Cadence vs Pace
           <span className="ml-2 text-sm font-normal text-gray-500">
             r = {correlations.cadenceSpeed.toFixed(3)}
           </span>
         </h3>
         <p className="text-xs text-gray-500 mb-4">
-          Positive correlation indicates cadence-dominant running style
+          Negative correlation indicates cadence-dominant running style
         </p>
         <ResponsiveContainer width="100%" height={300}>
           <ScatterChart>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
-              dataKey="speed"
-              domain={['dataMin - 0.2', 'dataMax + 0.2']}
-              label={{ value: 'Speed (m/s)', position: 'bottom', offset: -5 }}
+              dataKey="pace"
+              domain={['dataMin - 0.3', 'dataMax + 0.3']}
+              tickFormatter={formatPace}
+              label={{ value: 'Pace (min/km)', position: 'bottom', offset: -5 }}
             />
             <YAxis
               dataKey="cadence"
@@ -152,11 +165,47 @@ export function ChartsTab({ data }: ChartsTabProps) {
             />
             <Tooltip
               formatter={(value: number, name: string) => [
-                name === 'cadence' ? `${value.toFixed(0)} spm` : `${value.toFixed(2)} m/s`,
-                name === 'cadence' ? 'Cadence' : 'Speed',
+                name === 'cadence' ? `${value.toFixed(0)} spm` : formatPace(value) + '/km',
+                name === 'cadence' ? 'Cadence' : 'Pace',
               ]}
             />
-            <Scatter data={scatterData} fill="#f59e0b" fillOpacity={0.6} />
+            <Scatter data={scatterData.filter(d => d.cadence !== null)} fill="#f59e0b" fillOpacity={0.6} />
+          </ScatterChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Vertical Ratio vs Pace */}
+      <div className="bg-white rounded-xl p-6 shadow-sm">
+        <h3 className="font-semibold mb-4">
+          Vertical Ratio vs Pace
+          <span className="ml-2 text-sm font-normal text-gray-500">
+            r = {correlations.vrSpeed.toFixed(3)}
+          </span>
+        </h3>
+        <p className="text-xs text-gray-500 mb-4">
+          Lower VR at all paces indicates better running economy
+        </p>
+        <ResponsiveContainer width="100%" height={300}>
+          <ScatterChart>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey="pace"
+              domain={['dataMin - 0.3', 'dataMax + 0.3']}
+              tickFormatter={formatPace}
+              label={{ value: 'Pace (min/km)', position: 'bottom', offset: -5 }}
+            />
+            <YAxis
+              dataKey="vr"
+              domain={['dataMin - 1', 'dataMax + 1']}
+              label={{ value: 'VR (%)', angle: -90, position: 'insideLeft' }}
+            />
+            <Tooltip
+              formatter={(value: number, name: string) => [
+                name === 'vr' ? `${value.toFixed(2)}%` : formatPace(value) + '/km',
+                name === 'vr' ? 'Vertical Ratio' : 'Pace',
+              ]}
+            />
+            <Scatter data={scatterData.filter(d => d.vr !== null)} fill="#8b5cf6" fillOpacity={0.6} />
           </ScatterChart>
         </ResponsiveContainer>
       </div>
@@ -220,11 +269,11 @@ export function ChartsTab({ data }: ChartsTabProps) {
         </div>
       )}
 
-      {/* Power vs Speed (if Stryd data available) */}
+      {/* Power vs Pace (if Stryd data available) */}
       {hasStrydData && (
         <div className="bg-white rounded-xl p-6 shadow-sm">
           <h3 className="font-semibold mb-4">
-            Power vs Speed
+            Power vs Pace
             <span className="ml-2 text-sm font-normal text-gray-500">
               r = {correlations.powerSpeed.toFixed(3)}
             </span>
@@ -233,16 +282,17 @@ export function ChartsTab({ data }: ChartsTabProps) {
             </span>
           </h3>
           <p className="text-xs text-gray-500 mb-4">
-            Power should increase with speed - shows efficiency of power application
+            Power should increase at faster paces - shows efficiency of power application
           </p>
           <ResponsiveContainer width="100%" height={300}>
             <ScatterChart>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
-                dataKey="speed"
-                name="Speed"
-                domain={['dataMin - 0.2', 'dataMax + 0.2']}
-                label={{ value: 'Speed (m/s)', position: 'bottom', offset: -5 }}
+                dataKey="pace"
+                name="Pace"
+                domain={['dataMin - 0.3', 'dataMax + 0.3']}
+                tickFormatter={formatPace}
+                label={{ value: 'Pace (min/km)', position: 'bottom', offset: -5 }}
               />
               <YAxis
                 dataKey="power"
@@ -252,7 +302,7 @@ export function ChartsTab({ data }: ChartsTabProps) {
               />
               <Tooltip
                 formatter={(value: number, name: string) => [
-                  name === 'Power' ? `${value.toFixed(0)} W` : `${value.toFixed(2)} m/s`,
+                  name === 'Power' ? `${value.toFixed(0)} W` : formatPace(value) + '/km',
                   name,
                 ]}
               />
