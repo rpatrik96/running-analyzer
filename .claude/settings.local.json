@@ -3,7 +3,11 @@
     "allow": [
       "Bash(mkdir:*)",
       "Bash(npx tsc:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(ls:*)",
+      "Bash(for f in /Users/patrik.reizinger/Downloads/*.fit)",
+      "Bash(do echo \"=== Analyzing: $f ===\" npx tsx scripts/analyze-fit.ts \"$f\")",
+      "Bash(done)"
     ]
   }
 }

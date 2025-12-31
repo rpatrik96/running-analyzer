@@ -226,16 +226,43 @@ export function processRecords(records: FITRecord[]): RunningDataPoint[] {
       // Power: prefer Stryd power, fallback to Garmin power
       const power = r.stryd_power ?? r.power ?? null;
 
-      // LSS from developer fields (check common dev field patterns)
+      // Stryd metrics from developer fields
+      // These are stored as dev_X_Y but we can identify them by value ranges
       let lss = r.leg_spring_stiffness ?? null;
-      // Check for LSS in developer fields (dev_0_9 is common for Stryd LSS)
+      let formPower = r.form_power ?? null;
+      let airPower = r.air_power ?? null;
+
+      // Scan developer fields and identify by value ranges
       for (const key of Object.keys(r)) {
-        if (key.startsWith('dev_') && lss === null) {
+        if (key.startsWith('dev_')) {
           const val = r[key];
-          // LSS is typically 7-15 kN/m
-          if (typeof val === 'number' && val >= 5 && val <= 20) {
-            lss = val;
-            break;
+          if (typeof val !== 'number' || val === 0 || !Number.isFinite(val)) continue;
+
+          // Form Power: typically 30-100W (fraction of total power used for form)
+          if (formPower === null && val >= 30 && val <= 120) {
+            // dev_0_8 is common for form power
+            if (key.endsWith('_8')) {
+              formPower = val;
+              continue;
+            }
+          }
+
+          // LSS: typically 5-20 kN/m
+          if (lss === null && val >= 4 && val <= 25) {
+            // dev_0_9 or dev_0_3 is common for LSS
+            if (key.endsWith('_9') || key.endsWith('_3')) {
+              lss = val;
+              continue;
+            }
+          }
+
+          // Air Power: typically 0-15W at normal running speeds
+          if (airPower === null && val >= 0.05 && val <= 15) {
+            // dev_0_5 or dev_0_7 is common for air power
+            if (key.endsWith('_5') || key.endsWith('_7')) {
+              airPower = val;
+              continue;
+            }
           }
         }
       }
@@ -254,9 +281,9 @@ export function processRecords(records: FITRecord[]): RunningDataPoint[] {
         gctBalance,
         hr: r.heart_rate ?? null,
         power,
-        formPower: r.form_power ?? null,
+        formPower,
         lss,
-        airPower: r.air_power ?? null,
+        airPower,
         altitude: r.enhanced_altitude ?? r.altitude ?? r.elevation ?? null,
         impactLoadingRate: r.impact_loading_rate ?? null,
         brakingImpulse: r.braking_impulse ?? null,
