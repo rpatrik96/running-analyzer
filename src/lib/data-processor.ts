@@ -223,11 +223,9 @@ export function processRecords(records: FITRecord[]): RunningDataPoint[] {
       const gctBalance = getStanceTimeBalancePercent(r.stance_time_balance) ??
                          getStanceTimeBalancePercent(r.stance_time_balance_alt);
 
-      // Power: prefer Stryd power, fallback to Garmin power
-      const power = r.stryd_power ?? r.power ?? null;
-
       // Stryd metrics from developer fields
       // These are stored as dev_X_Y but we can identify them by value ranges
+      let strydPower: number | null = null;
       let lss = r.leg_spring_stiffness ?? null;
       let formPower = r.form_power ?? null;
       let airPower = r.air_power ?? null;
@@ -237,6 +235,15 @@ export function processRecords(records: FITRecord[]): RunningDataPoint[] {
         if (key.startsWith('dev_')) {
           const val = r[key];
           if (typeof val !== 'number' || val === 0 || !Number.isFinite(val)) continue;
+
+          // Main Stryd Power: typically 100-600W for running
+          // dev_0_0 is the most common location for Stryd power
+          if (strydPower === null && val >= 50 && val <= 800) {
+            if (key.endsWith('_0')) {
+              strydPower = val;
+              continue;
+            }
+          }
 
           // Form Power: typically 30-100W (fraction of total power used for form)
           if (formPower === null && val >= 30 && val <= 120) {
@@ -266,6 +273,9 @@ export function processRecords(records: FITRecord[]): RunningDataPoint[] {
           }
         }
       }
+
+      // Power: prefer Stryd developer field power, then mapped stryd_power, then native power
+      const power = strydPower ?? r.stryd_power ?? r.power ?? null;
 
       return {
         idx,

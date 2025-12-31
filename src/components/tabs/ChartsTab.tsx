@@ -199,7 +199,7 @@ export function ChartsTab({ data }: ChartsTabProps) {
             </span>
           </h3>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData}>
+            <LineChart data={chartData.filter(d => d.power !== null && d.power > 0)}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="distance"
@@ -214,8 +214,54 @@ export function ChartsTab({ data }: ChartsTabProps) {
                 formatter={(value: number) => [`${value.toFixed(0)} W`, 'Power']}
                 labelFormatter={(v) => `${Number(v).toFixed(2)} km`}
               />
-              <Line type="monotone" dataKey="power" stroke="#9333ea" dot={false} strokeWidth={2} />
+              <Line type="monotone" dataKey="power" stroke="#9333ea" dot={false} strokeWidth={2} connectNulls />
             </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Power vs Speed (if Stryd data available) */}
+      {hasStrydData && (
+        <div className="bg-white rounded-xl p-6 shadow-sm">
+          <h3 className="font-semibold mb-4">
+            Power vs Speed
+            <span className="ml-2 text-sm font-normal text-gray-500">
+              r = {correlations.powerSpeed.toFixed(3)}
+            </span>
+            <span className="ml-2 text-xs font-normal text-purple-600 bg-purple-50 px-2 py-1 rounded">
+              Stryd
+            </span>
+          </h3>
+          <p className="text-xs text-gray-500 mb-4">
+            Power should increase with speed - shows efficiency of power application
+          </p>
+          <ResponsiveContainer width="100%" height={300}>
+            <ScatterChart>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
+                dataKey="speed"
+                name="Speed"
+                domain={['dataMin - 0.2', 'dataMax + 0.2']}
+                label={{ value: 'Speed (m/s)', position: 'bottom', offset: -5 }}
+              />
+              <YAxis
+                dataKey="power"
+                name="Power"
+                domain={['dataMin - 20', 'dataMax + 20']}
+                label={{ value: 'Power (W)', angle: -90, position: 'insideLeft' }}
+              />
+              <Tooltip
+                formatter={(value: number, name: string) => [
+                  name === 'Power' ? `${value.toFixed(0)} W` : `${value.toFixed(2)} m/s`,
+                  name,
+                ]}
+              />
+              <Scatter
+                data={scatterData.filter(d => d.power !== null && d.power > 0)}
+                fill="#9333ea"
+                fillOpacity={0.6}
+              />
+            </ScatterChart>
           </ResponsiveContainer>
         </div>
       )}
