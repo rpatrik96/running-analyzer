@@ -104,6 +104,16 @@ export function SummaryTab({ data }: SummaryTabProps) {
                 good={parseFloat(summary.formPower.mean) < 80}
               />
             )}
+            {summary.formPowerRatio && (
+              <MetricCard
+                label="Form Power Ratio"
+                value={summary.formPowerRatio.mean}
+                unit="%"
+                subValue={`\u00b1 ${summary.formPowerRatio.std}`}
+                target="<25%"
+                good={parseFloat(summary.formPowerRatio.mean) < 25}
+              />
+            )}
             {summary.lss && (
               <MetricCard
                 label="Leg Spring Stiffness"
@@ -120,6 +130,14 @@ export function SummaryTab({ data }: SummaryTabProps) {
                 value={summary.airPower.mean}
                 unit="W"
                 subValue={`\u00b1 ${summary.airPower.std}`}
+              />
+            )}
+            {summary.impactGs && (
+              <MetricCard
+                label="Impact GS"
+                value={summary.impactGs.mean}
+                unit="g"
+                subValue={`\u00b1 ${summary.impactGs.std}`}
               />
             )}
             {summary.impactLoadingRate && (

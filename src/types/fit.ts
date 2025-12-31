@@ -94,11 +94,13 @@ export interface RunningDataPoint {
   hr: number | null;
   power: number | null;
   formPower: number | null;
+  formPowerRatio: number | null; // Form Power / Total Power * 100
   lss: number | null;
   airPower: number | null;
   altitude: number | null;
   impactLoadingRate: number | null;
   brakingImpulse: number | null;
+  impactGs: number | null; // Impact measured in g-force
 }
 
 // Statistics for a metric
@@ -171,9 +173,11 @@ export interface Summary {
   hr: { mean: string; max: number } | null;
   power: MetricStats | null;
   formPower: MetricStats | null;
+  formPowerRatio: MetricStats | null; // Form Power / Total Power * 100
   lss: MetricStats | null;
   airPower: MetricStats | null;
   impactLoadingRate: MetricStats | null;
+  impactGs: MetricStats | null; // Impact in g-force
 }
 
 // Complete analysis result

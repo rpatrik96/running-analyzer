@@ -232,6 +232,7 @@ export function processRecords(records: FITRecord[]): RunningDataPoint[] {
       let lss = r.leg_spring_stiffness ?? null;
       let formPower = r.form_power ?? null;
       let airPower = r.air_power ?? null;
+      let impactGs: number | null = null;
 
       // Scan developer fields and identify by value ranges
       for (const key of Object.keys(r)) {
@@ -274,11 +275,25 @@ export function processRecords(records: FITRecord[]): RunningDataPoint[] {
               continue;
             }
           }
+
+          // Impact GS: typically 5-50 g (peak impact force in g-force)
+          // dev_0_11 is common for impact gs
+          if (impactGs === null && val >= 5 && val <= 60) {
+            if (key.endsWith('_11')) {
+              impactGs = val;
+              continue;
+            }
+          }
         }
       }
 
       // Power: prefer Stryd developer field power, then mapped stryd_power, then native power
       const power = strydPower ?? r.stryd_power ?? r.power ?? null;
+
+      // Calculate Form Power Ratio (percentage of total power used for form)
+      const formPowerRatio = (power !== null && formPower !== null && power > 0)
+        ? (formPower / power) * 100
+        : null;
 
       return {
         idx,
@@ -295,11 +310,13 @@ export function processRecords(records: FITRecord[]): RunningDataPoint[] {
         hr: r.heart_rate ?? null,
         power,
         formPower,
+        formPowerRatio,
         lss,
         airPower,
         altitude: r.enhanced_altitude ?? r.altitude ?? r.elevation ?? null,
         impactLoadingRate: r.impact_loading_rate ?? null,
         brakingImpulse: r.braking_impulse ?? null,
+        impactGs,
       };
     });
 }
@@ -355,9 +372,11 @@ export function calculateMetrics(processed: RunningDataPoint[]): AnalysisResult 
   const hr = extractValues(processed, 'hr');
   const power = extractValues(processed, 'power');
   const formPower = extractValues(processed, 'formPower');
+  const formPowerRatio = extractValues(processed, 'formPowerRatio');
   const lss = extractValues(processed, 'lss');
   const airPower = extractValues(processed, 'airPower');
   const impactLoadingRate = extractValues(processed, 'impactLoadingRate');
+  const impactGs = extractValues(processed, 'impactGs');
 
   // Check for Stryd data
   const hasStrydData = power.length > 0 || formPower.length > 0 || lss.length > 0;
@@ -384,9 +403,11 @@ export function calculateMetrics(processed: RunningDataPoint[]): AnalysisResult 
     hr: hr.length ? { mean: mean(hr).toFixed(0), max: Math.max(...hr) } : null,
     power: power.length ? calcStats(power, 0) : null,
     formPower: formPower.length ? calcStats(formPower, 0) : null,
+    formPowerRatio: formPowerRatio.length ? calcStats(formPowerRatio, 1) : null,
     lss: lss.length ? calcStats(lss, 2) : null,
     airPower: airPower.length ? calcStats(airPower, 1) : null,
     impactLoadingRate: impactLoadingRate.length ? calcStats(impactLoadingRate, 1) : null,
+    impactGs: impactGs.length ? calcStats(impactGs, 1) : null,
   };
 
   // Calculate correlations (only if we have enough data)

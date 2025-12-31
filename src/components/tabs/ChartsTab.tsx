@@ -411,6 +411,101 @@ export function ChartsTab({ data }: ChartsTabProps) {
         </div>
       )}
 
+      {/* LSS vs Pace (if Stryd data available) */}
+      {hasStrydData && correlations.lssSpeed !== 0 && (
+        <div className="bg-white rounded-xl p-6 shadow-sm">
+          <h3 className="font-semibold mb-4">
+            Leg Spring Stiffness vs Pace
+            <span className="ml-2 text-sm font-normal text-gray-500">
+              r = {correlations.lssSpeed.toFixed(3)}
+            </span>
+            <span className="ml-2 text-xs font-normal text-purple-600 bg-purple-50 px-2 py-1 rounded">
+              Stryd
+            </span>
+          </h3>
+          <p className="text-xs text-gray-500 mb-4">
+            Higher LSS at faster paces indicates better elastic energy return from muscles and tendons
+          </p>
+          <ResponsiveContainer width="100%" height={300}>
+            <ScatterChart>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
+                dataKey="pace"
+                name="Pace"
+                type="number"
+                domain={[minPace - 0.3, maxPace + 0.3]}
+                ticks={paceTicks}
+                tickFormatter={formatPace}
+                label={{ value: 'Pace (min/km)', position: 'bottom', offset: -5 }}
+              />
+              <YAxis
+                dataKey="lss"
+                name="LSS"
+                domain={['dataMin - 1', 'dataMax + 1']}
+                label={{ value: 'LSS (kN/m)', angle: -90, position: 'insideLeft' }}
+              />
+              <Tooltip
+                formatter={(value: number, name: string) => [
+                  name === 'LSS' ? `${value.toFixed(2)} kN/m` : formatPace(value) + '/km',
+                  name,
+                ]}
+              />
+              <Scatter
+                data={scatterData.filter(d => d.lss !== null && d.lss > 0)}
+                fill="#ec4899"
+                fillOpacity={0.6}
+              />
+            </ScatterChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Form Power Ratio vs Pace (if Stryd data available) */}
+      {hasStrydData && scatterData.some(d => d.formPowerRatio !== null) && (
+        <div className="bg-white rounded-xl p-6 shadow-sm">
+          <h3 className="font-semibold mb-4">
+            Form Power Ratio vs Pace
+            <span className="ml-2 text-xs font-normal text-purple-600 bg-purple-50 px-2 py-1 rounded">
+              Stryd
+            </span>
+          </h3>
+          <p className="text-xs text-gray-500 mb-4">
+            Lower ratio at all paces is better - shows less energy wasted on vertical movement and braking
+          </p>
+          <ResponsiveContainer width="100%" height={300}>
+            <ScatterChart>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
+                dataKey="pace"
+                name="Pace"
+                type="number"
+                domain={[minPace - 0.3, maxPace + 0.3]}
+                ticks={paceTicks}
+                tickFormatter={formatPace}
+                label={{ value: 'Pace (min/km)', position: 'bottom', offset: -5 }}
+              />
+              <YAxis
+                dataKey="formPowerRatio"
+                name="Form Power Ratio"
+                domain={['dataMin - 2', 'dataMax + 2']}
+                label={{ value: 'Form Power Ratio (%)', angle: -90, position: 'insideLeft' }}
+              />
+              <Tooltip
+                formatter={(value: number, name: string) => [
+                  name === 'Form Power Ratio' ? `${value.toFixed(1)}%` : formatPace(value) + '/km',
+                  name,
+                ]}
+              />
+              <Scatter
+                data={scatterData.filter(d => d.formPowerRatio !== null)}
+                fill="#f97316"
+                fillOpacity={0.6}
+              />
+            </ScatterChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
       {/* Heart Rate over distance (if available) */}
       {data.summary.hr && (
         <div className="bg-white rounded-xl p-6 shadow-sm">

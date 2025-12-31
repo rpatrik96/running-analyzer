@@ -16,8 +16,10 @@ A modern web application for analyzing running form metrics from Garmin and Stry
 - Full Stryd developer field support:
   - Running Power
   - Form Power
+  - Form Power Ratio (calculated efficiency metric)
   - Leg Spring Stiffness (LSS)
   - Air Power
+  - Impact GS (peak impact force)
   - Impact Loading Rate
 
 ### Analysis Tabs
@@ -30,12 +32,17 @@ A modern web application for analyzing running form metrics from Garmin and Stry
 
 #### Charts
 - GCT over distance (fatigue tracking)
-- GCT vs Speed scatter plot with correlation
-- Step Length vs Speed scatter plot
-- Cadence vs Speed scatter plot
+- GCT vs Pace scatter plot with correlation
+- Step Length vs Pace scatter plot
+- Cadence vs Pace scatter plot
+- Vertical Ratio vs Pace scatter plot
 - Vertical Ratio over distance (efficiency tracking)
 - Power over distance (with Stryd data)
+- Power vs Pace scatter plot (with Stryd data)
+- LSS vs Pace scatter plot (with Stryd data)
+- Form Power Ratio vs Pace scatter plot (with Stryd data)
 - Heart Rate over distance
+- Outlier filtering option for scatter plots
 
 #### Correlations
 - All key metric correlations with strength indicators
@@ -108,8 +115,10 @@ npm run preview
 |--------|-------------|-------|
 | Running Power | Total power output | Watts |
 | Form Power | Power used maintaining form | <80W ideal |
+| Form Power Ratio | Form Power / Total Power | <25% ideal |
 | Leg Spring Stiffness | Elastic energy return | >9 kN/m ideal |
 | Air Power | Power to overcome air resistance | Increases with speed |
+| Impact GS | Peak impact force | g-force |
 | Impact Loading Rate | Force absorption rate | BW/s |
 
 ## Tech Stack
