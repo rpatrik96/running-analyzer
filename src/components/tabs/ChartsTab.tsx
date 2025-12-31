@@ -25,6 +25,20 @@ function formatPace(pace: number | null): string {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
+// Generate nice pace tick values (whole minutes and half minutes)
+function getPaceTicks(minPace: number, maxPace: number): number[] {
+  const ticks: number[] = [];
+  // Start from floor of min, go to ceil of max, in 0.5 increments
+  const start = Math.floor(minPace);
+  const end = Math.ceil(maxPace);
+  for (let p = start; p <= end; p += 0.5) {
+    if (p >= minPace - 0.3 && p <= maxPace + 0.3) {
+      ticks.push(p);
+    }
+  }
+  return ticks;
+}
+
 export function ChartsTab({ data }: ChartsTabProps) {
   const { processed, correlations, hasStrydData } = data;
 
@@ -33,6 +47,12 @@ export function ChartsTab({ data }: ChartsTabProps) {
   const scatterData = processed
     .filter((_, i) => i % 3 === 0)
     .filter(d => d.pace !== null && d.pace > 2 && d.pace < 15);
+
+  // Calculate pace range for tick generation
+  const paces = scatterData.map(d => d.pace as number);
+  const minPace = Math.min(...paces);
+  const maxPace = Math.max(...paces);
+  const paceTicks = getPaceTicks(minPace, maxPace);
 
   return (
     <div className="space-y-6">
@@ -81,7 +101,9 @@ export function ChartsTab({ data }: ChartsTabProps) {
             <XAxis
               dataKey="pace"
               name="Pace"
-              domain={['dataMin - 0.3', 'dataMax + 0.3']}
+              type="number"
+              domain={[minPace - 0.3, maxPace + 0.3]}
+              ticks={paceTicks}
               tickFormatter={formatPace}
               label={{ value: 'Pace (min/km)', position: 'bottom', offset: -5 }}
             />
@@ -118,7 +140,9 @@ export function ChartsTab({ data }: ChartsTabProps) {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="pace"
-              domain={['dataMin - 0.3', 'dataMax + 0.3']}
+              type="number"
+              domain={[minPace - 0.3, maxPace + 0.3]}
+              ticks={paceTicks}
               tickFormatter={formatPace}
               label={{ value: 'Pace (min/km)', position: 'bottom', offset: -5 }}
             />
@@ -154,7 +178,9 @@ export function ChartsTab({ data }: ChartsTabProps) {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="pace"
-              domain={['dataMin - 0.3', 'dataMax + 0.3']}
+              type="number"
+              domain={[minPace - 0.3, maxPace + 0.3]}
+              ticks={paceTicks}
               tickFormatter={formatPace}
               label={{ value: 'Pace (min/km)', position: 'bottom', offset: -5 }}
             />
@@ -190,7 +216,9 @@ export function ChartsTab({ data }: ChartsTabProps) {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="pace"
-              domain={['dataMin - 0.3', 'dataMax + 0.3']}
+              type="number"
+              domain={[minPace - 0.3, maxPace + 0.3]}
+              ticks={paceTicks}
               tickFormatter={formatPace}
               label={{ value: 'Pace (min/km)', position: 'bottom', offset: -5 }}
             />
@@ -290,7 +318,9 @@ export function ChartsTab({ data }: ChartsTabProps) {
               <XAxis
                 dataKey="pace"
                 name="Pace"
-                domain={['dataMin - 0.3', 'dataMax + 0.3']}
+                type="number"
+                domain={[minPace - 0.3, maxPace + 0.3]}
+                ticks={paceTicks}
                 tickFormatter={formatPace}
                 label={{ value: 'Pace (min/km)', position: 'bottom', offset: -5 }}
               />
