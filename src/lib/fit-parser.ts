@@ -24,6 +24,7 @@ const MSG_DEVELOPER_DATA_ID = 207;
 const MSG_RECORD = 20;
 
 // Record message field definitions (Garmin FIT SDK)
+// Some devices use alternate field numbers for running dynamics
 const RECORD_FIELDS: Record<number, string> = {
   253: 'timestamp',
   0: 'position_lat',
@@ -50,7 +51,10 @@ const RECORD_FIELDS: Record<number, string> = {
   73: 'enhanced_speed',
   78: 'saturated_hemoglobin_percent',
   79: 'total_hemoglobin_conc',
-  83: 'core_temperature',
+  // Alternate field locations used by some Garmin devices (Forerunner 265, etc.)
+  83: 'vertical_ratio_alt',      // Some devices put VR here
+  84: 'stance_time_balance_alt', // Some devices put GCT balance here
+  85: 'step_length_alt',         // Some devices put step length here
 };
 
 // Known Stryd developer field names (case-insensitive matching)

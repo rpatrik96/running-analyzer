@@ -58,6 +58,10 @@ export interface FITRecord {
   vertical_ratio?: number;
   stance_time_balance?: number;
   step_length?: number;
+  // Alternate field locations (some Garmin devices use these)
+  vertical_ratio_alt?: number;
+  stance_time_balance_alt?: number;
+  step_length_alt?: number;
   // Stryd-specific fields (developer fields)
   stryd_power?: number;
   form_power?: number;

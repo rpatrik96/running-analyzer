@@ -138,14 +138,15 @@ function getGctMs(rawGct: number | undefined): number | null {
 
 /**
  * Get vertical oscillation in cm from raw FIT value
- * FIT SDK: vertical_oscillation has scale 100, units mm
- * Raw value / 100 = mm, / 10 = cm
+ * FIT SDK: vertical_oscillation has scale 10, units mm
+ * Raw value / 10 = mm, / 10 = cm
  */
 function getVOCm(rawVO: number | undefined): number | null {
   if (rawVO === undefined || rawVO === 0) return null;
-  // Raw value is in 0.1mm (scale 100 means divide by 100 to get mm)
+  // Raw value has scale 10, so divide by 10 to get mm
   // Then divide by 10 to get cm
-  return rawVO / 100 / 10; // 0.1mm -> mm -> cm
+  // Total: divide by 100
+  return rawVO / 100; // 0.1mm -> mm -> cm
 }
 
 /**
@@ -201,25 +202,26 @@ export function processRecords(records: FITRecord[]): RunningDataPoint[] {
         lastValidDistance = distanceKm;
       }
 
-      // Vertical oscillation in cm
+      // Vertical oscillation in cm (check standard and Stryd fields)
       const vo = getVOCm(r.vertical_oscillation) ?? r.vertical_oscillation_stryd ?? null;
 
       // Ground contact time in ms
       const gct = getGctMs(r.stance_time) ?? getGctMs(r.ground_time) ?? null;
 
-      // Step length in mm
-      const sl = getStepLengthMm(r.step_length);
+      // Step length in mm (check standard field 49 and alternate field 85)
+      const sl = getStepLengthMm(r.step_length) ?? getStepLengthMm(r.step_length_alt);
 
-      // Vertical ratio as percentage
-      let vr = getVerticalRatioPercent(r.vertical_ratio);
+      // Vertical ratio as percentage (check standard field 47 and alternate field 83)
+      let vr = getVerticalRatioPercent(r.vertical_ratio) ?? getVerticalRatioPercent(r.vertical_ratio_alt);
       // Calculate if not provided (VO in cm, SL in mm)
       if (vr === null && vo !== null && sl !== null && sl > 0) {
         // VR = (VO in mm) / (SL in mm) * 100
         vr = ((vo * 10) / sl) * 100;
       }
 
-      // GCT Balance
-      const gctBalance = getStanceTimeBalancePercent(r.stance_time_balance);
+      // GCT Balance (check standard field 48 and alternate field 84)
+      const gctBalance = getStanceTimeBalancePercent(r.stance_time_balance) ??
+                         getStanceTimeBalancePercent(r.stance_time_balance_alt);
 
       // Power: prefer Stryd power, fallback to Garmin power
       const power = r.stryd_power ?? r.power ?? null;
