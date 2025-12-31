@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import {
   LineChart,
   Line,
@@ -39,23 +40,87 @@ function getPaceTicks(minPace: number, maxPace: number): number[] {
   return ticks;
 }
 
+// Calculate percentile value from sorted array
+function percentile(sortedArr: number[], p: number): number {
+  const index = (p / 100) * (sortedArr.length - 1);
+  const lower = Math.floor(index);
+  const upper = Math.ceil(index);
+  if (lower === upper) return sortedArr[lower];
+  return sortedArr[lower] + (sortedArr[upper] - sortedArr[lower]) * (index - lower);
+}
+
 export function ChartsTab({ data }: ChartsTabProps) {
   const { processed, correlations, hasStrydData } = data;
+  const [filterOutliers, setFilterOutliers] = useState(true);
 
   // Downsample for better performance and filter for valid pace
   const chartData = processed.filter((_, i) => i % 5 === 0);
-  const scatterData = processed
-    .filter((_, i) => i % 3 === 0)
-    .filter(d => d.pace !== null && d.pace > 2 && d.pace < 15);
+
+  // Calculate outlier threshold (95th percentile of pace = slowest 5%)
+  const allPaces = useMemo(() => {
+    const paces = processed
+      .map(d => d.pace)
+      .filter((p): p is number => p !== null && p > 2 && p < 15)
+      .sort((a, b) => a - b);
+    return paces;
+  }, [processed]);
+
+  const paceThreshold = useMemo(() => {
+    if (allPaces.length === 0) return 10;
+    // Use 95th percentile as outlier threshold (slower than 95% of data points)
+    return percentile(allPaces, 95);
+  }, [allPaces]);
+
+  // Filter scatter data based on outlier setting
+  const scatterData = useMemo(() => {
+    let data = processed
+      .filter((_, i) => i % 3 === 0)
+      .filter(d => d.pace !== null && d.pace > 2 && d.pace < 15);
+
+    if (filterOutliers) {
+      data = data.filter(d => (d.pace as number) <= paceThreshold);
+    }
+
+    return data;
+  }, [processed, filterOutliers, paceThreshold]);
 
   // Calculate pace range for tick generation
-  const paces = scatterData.map(d => d.pace as number);
-  const minPace = Math.min(...paces);
-  const maxPace = Math.max(...paces);
-  const paceTicks = getPaceTicks(minPace, maxPace);
+  const { minPace, maxPace, paceTicks } = useMemo(() => {
+    const paces = scatterData.map(d => d.pace as number);
+    if (paces.length === 0) return { minPace: 4, maxPace: 8, paceTicks: [4, 5, 6, 7, 8] };
+    const min = Math.min(...paces);
+    const max = Math.max(...paces);
+    return { minPace: min, maxPace: max, paceTicks: getPaceTicks(min, max) };
+  }, [scatterData]);
+
+  const outlierCount = useMemo(() => {
+    const total = processed.filter(d => d.pace !== null && d.pace > 2 && d.pace < 15).length;
+    const filtered = processed.filter(d => d.pace !== null && d.pace > 2 && (d.pace as number) <= paceThreshold).length;
+    return total - filtered;
+  }, [processed, paceThreshold]);
 
   return (
     <div className="space-y-6">
+      {/* Filter controls */}
+      <div className="bg-white rounded-xl p-4 shadow-sm flex items-center justify-between">
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={filterOutliers}
+            onChange={(e) => setFilterOutliers(e.target.checked)}
+            className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+          />
+          <span className="text-sm text-gray-700">
+            Filter outliers (very slow paces)
+          </span>
+        </label>
+        {filterOutliers && outlierCount > 0 && (
+          <span className="text-xs text-gray-500">
+            Hiding {outlierCount} points slower than {formatPace(paceThreshold)}/km
+          </span>
+        )}
+      </div>
+
       {/* GCT over distance */}
       <div className="bg-white rounded-xl p-6 shadow-sm">
         <h3 className="font-semibold mb-4">Ground Contact Time Over Distance</h3>
