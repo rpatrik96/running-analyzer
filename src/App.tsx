@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { parseFITFile } from './lib/fit-parser';
-import { processRecords, calculateMetrics } from './lib/data-processor';
+import { processRecords, calculateMetrics, analyzeRawRecords, type ParseDebugInfo } from './lib/data-processor';
 import type { AnalysisResult } from './types/fit';
 import { FileUpload } from './components/FileUpload';
 import { SummaryTab } from './components/tabs/SummaryTab';
@@ -21,27 +21,46 @@ function App() {
   const [data, setData] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<ParseDebugInfo | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('summary');
   const [fileName, setFileName] = useState<string | null>(null);
 
   const handleFileSelect = useCallback(async (file: File) => {
     setLoading(true);
     setError(null);
+    setDebugInfo(null);
     setFileName(file.name);
 
     try {
       const arrayBuffer = await file.arrayBuffer();
       const records = await parseFITFile(arrayBuffer);
 
+      // Analyze raw records for debugging
+      const debug = analyzeRawRecords(records);
+      setDebugInfo(debug);
+
       if (records.length === 0) {
-        throw new Error('No running data found in FIT file');
+        throw new Error('No record messages found in FIT file. This may not be a valid activity file.');
+      }
+
+      if (debug.recordsWithSpeed === 0) {
+        throw new Error(
+          `No speed data found in ${records.length} records. This file may not contain running/activity data.`
+        );
       }
 
       const processed = processRecords(records);
 
       if (processed.length < 10) {
+        const details = [
+          `Total records: ${debug.totalRecords}`,
+          `Records with speed: ${debug.recordsWithSpeed}`,
+          debug.speedRange ? `Speed range: ${debug.speedRange.min.toFixed(2)} - ${debug.speedRange.max.toFixed(2)} m/s` : 'No speed data',
+        ].join('. ');
+
         throw new Error(
-          `Not enough valid running data points found (${processed.length}). Ensure this is a running activity with valid running dynamics data.`
+          `Not enough valid data points (${processed.length}). ${details}. ` +
+          `Speed must be > 0.5 m/s to be considered running.`
         );
       }
 
@@ -88,9 +107,27 @@ function App() {
 
         {/* Error Display */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 text-red-700">
-            <div className="font-medium">Error</div>
-            <p className="text-sm mt-1">{error}</p>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="font-medium text-red-700">Error</div>
+            <p className="text-sm mt-1 text-red-600">{error}</p>
+            {debugInfo && (
+              <details className="mt-3">
+                <summary className="text-xs text-red-500 cursor-pointer">Debug Information</summary>
+                <pre className="mt-2 text-xs bg-red-100 p-2 rounded overflow-x-auto text-red-800">
+{JSON.stringify({
+  totalRecords: debugInfo.totalRecords,
+  recordsWithSpeed: debugInfo.recordsWithSpeed,
+  recordsWithGCT: debugInfo.recordsWithGCT,
+  recordsWithHR: debugInfo.recordsWithHR,
+  recordsWithCadence: debugInfo.recordsWithCadence,
+  recordsWithPower: debugInfo.recordsWithPower,
+  speedRange: debugInfo.speedRange,
+  gctRange: debugInfo.gctRange,
+  sampleRecordKeys: debugInfo.sampleRecord ? Object.keys(debugInfo.sampleRecord) : [],
+}, null, 2)}
+                </pre>
+              </details>
+            )}
           </div>
         )}
 

@@ -180,4 +180,5 @@ export interface AnalysisResult {
   splitAnalysis: SplitAnalysis;
   processed: RunningDataPoint[];
   hasStrydData: boolean;
+  hasRunningDynamics: boolean;
 }

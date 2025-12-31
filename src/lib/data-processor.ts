@@ -16,15 +16,73 @@ import type {
 import { mean, std, correlation } from './statistics';
 
 /**
+ * Debug info about parsed records
+ */
+export interface ParseDebugInfo {
+  totalRecords: number;
+  recordsWithSpeed: number;
+  recordsWithGCT: number;
+  recordsWithHR: number;
+  recordsWithCadence: number;
+  recordsWithPower: number;
+  sampleRecord: FITRecord | null;
+  speedRange: { min: number; max: number } | null;
+  gctRange: { min: number; max: number } | null;
+}
+
+/**
+ * Analyze raw records for debugging
+ */
+export function analyzeRawRecords(records: FITRecord[]): ParseDebugInfo {
+  const speeds: number[] = [];
+  const gcts: number[] = [];
+
+  let recordsWithSpeed = 0;
+  let recordsWithGCT = 0;
+  let recordsWithHR = 0;
+  let recordsWithCadence = 0;
+  let recordsWithPower = 0;
+
+  for (const r of records) {
+    const speed = r.enhanced_speed ?? (r.speed ? r.speed / 1000 : 0);
+    const gct = r.stance_time ?? r.ground_time ?? 0;
+
+    if (speed > 0) {
+      recordsWithSpeed++;
+      speeds.push(speed);
+    }
+    if (gct > 0) {
+      recordsWithGCT++;
+      gcts.push(gct);
+    }
+    if (r.heart_rate) recordsWithHR++;
+    if (r.cadence) recordsWithCadence++;
+    if (r.power || r.stryd_power) recordsWithPower++;
+  }
+
+  return {
+    totalRecords: records.length,
+    recordsWithSpeed,
+    recordsWithGCT,
+    recordsWithHR,
+    recordsWithCadence,
+    recordsWithPower,
+    sampleRecord: records.length > 0 ? records[Math.floor(records.length / 2)] : null,
+    speedRange: speeds.length > 0 ? { min: Math.min(...speeds), max: Math.max(...speeds) } : null,
+    gctRange: gcts.length > 0 ? { min: Math.min(...gcts), max: Math.max(...gcts) } : null,
+  };
+}
+
+/**
  * Process raw FIT records into running data points
+ * Now works with or without running dynamics data
  */
 export function processRecords(records: FITRecord[]): RunningDataPoint[] {
   return records
     .filter((r) => {
-      // Filter for valid running data
+      // Only require speed - running dynamics are optional
       const speed = r.enhanced_speed ?? (r.speed ? r.speed / 1000 : 0);
-      const gct = r.stance_time ?? r.ground_time;
-      return speed > 0.5 && gct && gct > 100 && gct < 500;
+      return speed > 0.5; // Minimum running speed (very slow jog)
     })
     .map((r, idx) => {
       const speed = r.enhanced_speed ?? (r.speed ? r.speed / 1000 : 0);
@@ -36,13 +94,15 @@ export function processRecords(records: FITRecord[]): RunningDataPoint[] {
         : r.vertical_oscillation_stryd ?? null;
 
       // Ground contact time: prefer Garmin stance_time, fallback to Stryd ground_time
-      const gct = r.stance_time ?? r.ground_time ?? 0;
+      const rawGct = r.stance_time ?? r.ground_time ?? null;
+      // Validate GCT is in reasonable range (100-500ms)
+      const gct = rawGct !== null && rawGct > 100 && rawGct < 500 ? rawGct : null;
 
       // Step length
       const sl = r.step_length ?? null;
 
       // Vertical ratio: calculate if not provided
-      const vr = r.vertical_ratio ?? (vo && sl ? (vo * 10 / sl) * 100 : null);
+      const vr = r.vertical_ratio ?? (vo && sl ? ((vo * 10) / sl) * 100 : null);
 
       // Power: prefer Stryd power, fallback to Garmin power
       const power = r.stryd_power ?? r.power ?? null;
@@ -53,7 +113,7 @@ export function processRecords(records: FITRecord[]): RunningDataPoint[] {
         distance: r.distance ? r.distance / 1000 : idx * speed / 1000,
         speed,
         pace: speed > 0 ? 1000 / (speed * 60) : null, // min/km
-        gct,
+        gct: gct ?? 0, // Use 0 as placeholder for missing GCT
         vo,
         sl,
         cadence,
@@ -68,14 +128,16 @@ export function processRecords(records: FITRecord[]): RunningDataPoint[] {
         impactLoadingRate: r.impact_loading_rate ?? null,
         brakingImpulse: r.braking_impulse ?? null,
       };
-    })
-    .filter((r) => r.gct > 150 && r.gct < 350); // Final sanity filter
+    });
 }
 
 /**
  * Helper to calculate metric stats
  */
 function calcStats(arr: number[], decimals: number = 1): MetricStats {
+  if (arr.length === 0) {
+    return { mean: '0', std: '0', min: 0, max: 0 };
+  }
   return {
     mean: mean(arr).toFixed(decimals),
     std: std(arr).toFixed(decimals),
@@ -90,7 +152,7 @@ function calcStats(arr: number[], decimals: number = 1): MetricStats {
 function extractValues(data: RunningDataPoint[], key: keyof RunningDataPoint): number[] {
   return data
     .map((r) => r[key] as number | null)
-    .filter((v): v is number => v !== null && v !== undefined && Number.isFinite(v));
+    .filter((v): v is number => v !== null && v !== undefined && Number.isFinite(v) && v !== 0);
 }
 
 /**
@@ -127,6 +189,9 @@ export function calculateMetrics(processed: RunningDataPoint[]): AnalysisResult 
   // Check for Stryd data
   const hasStrydData = power.length > 0 || formPower.length > 0 || lss.length > 0;
 
+  // Check for running dynamics data
+  const hasRunningDynamics = gct.length > 0;
+
   // Calculate average pace
   const avgSpeed = mean(speed);
   const avgPace = avgSpeed > 0 ? 1000 / (avgSpeed * 60) : 0;
@@ -137,11 +202,11 @@ export function calculateMetrics(processed: RunningDataPoint[]): AnalysisResult 
     distance: (processed[processed.length - 1]?.distance ?? 0).toFixed(2),
     avgPace: formatPace(avgPace),
     avgSpeed: avgSpeed.toFixed(2),
-    gct: calcStats(gct),
-    vo: calcStats(vo, 2),
-    sl: calcStats(sl, 0),
-    cadence: calcStats(cadence, 0),
-    vr: calcStats(vr, 2),
+    gct: gct.length > 0 ? calcStats(gct) : { mean: 'N/A', std: 'N/A', min: 0, max: 0 },
+    vo: vo.length > 0 ? calcStats(vo, 2) : { mean: 'N/A', std: 'N/A', min: 0, max: 0 },
+    sl: sl.length > 0 ? calcStats(sl, 0) : { mean: 'N/A', std: 'N/A', min: 0, max: 0 },
+    cadence: cadence.length > 0 ? calcStats(cadence, 0) : { mean: 'N/A', std: 'N/A', min: 0, max: 0 },
+    vr: vr.length > 0 ? calcStats(vr, 2) : { mean: 'N/A', std: 'N/A', min: 0, max: 0 },
     gctBalance: gctBalance.length ? mean(gctBalance).toFixed(1) : 'N/A',
     hr: hr.length ? { mean: mean(hr).toFixed(0), max: Math.max(...hr) } : null,
     power: power.length ? calcStats(power, 0) : null,
@@ -151,19 +216,19 @@ export function calculateMetrics(processed: RunningDataPoint[]): AnalysisResult 
     impactLoadingRate: impactLoadingRate.length ? calcStats(impactLoadingRate, 1) : null,
   };
 
-  // Calculate correlations
+  // Calculate correlations (only if we have enough data)
   const correlations: Correlations = {
-    gctSpeed: correlation(gct, speed.slice(0, gct.length)),
-    gctCadence: correlation(gct, cadence.slice(0, gct.length)),
-    slSpeed: correlation(sl, speed.slice(0, sl.length)),
-    slCadence: correlation(sl, cadence.slice(0, sl.length)),
-    voSpeed: correlation(vo, speed.slice(0, vo.length)),
-    vrSpeed: correlation(vr, speed.slice(0, vr.length)),
-    powerSpeed: power.length > 0 ? correlation(power, speed.slice(0, power.length)) : 0,
-    lssSpeed: lss.length > 0 ? correlation(lss, speed.slice(0, lss.length)) : 0,
-    formPowerSpeed: formPower.length > 0 ? correlation(formPower, speed.slice(0, formPower.length)) : 0,
-    hrSpeed: hr.length > 0 ? correlation(hr, speed.slice(0, hr.length)) : 0,
-    cadenceSpeed: correlation(cadence, speed.slice(0, cadence.length)),
+    gctSpeed: gct.length > 10 ? correlation(gct, speed.slice(0, gct.length)) : 0,
+    gctCadence: gct.length > 10 && cadence.length > 10 ? correlation(gct, cadence.slice(0, gct.length)) : 0,
+    slSpeed: sl.length > 10 ? correlation(sl, speed.slice(0, sl.length)) : 0,
+    slCadence: sl.length > 10 && cadence.length > 10 ? correlation(sl, cadence.slice(0, sl.length)) : 0,
+    voSpeed: vo.length > 10 ? correlation(vo, speed.slice(0, vo.length)) : 0,
+    vrSpeed: vr.length > 10 ? correlation(vr, speed.slice(0, vr.length)) : 0,
+    powerSpeed: power.length > 10 ? correlation(power, speed.slice(0, power.length)) : 0,
+    lssSpeed: lss.length > 10 ? correlation(lss, speed.slice(0, lss.length)) : 0,
+    formPowerSpeed: formPower.length > 10 ? correlation(formPower, speed.slice(0, formPower.length)) : 0,
+    hrSpeed: hr.length > 10 ? correlation(hr, speed.slice(0, hr.length)) : 0,
+    cadenceSpeed: cadence.length > 10 ? correlation(cadence, speed.slice(0, cadence.length)) : 0,
   };
 
   // Pace bins analysis
@@ -181,7 +246,7 @@ export function calculateMetrics(processed: RunningDataPoint[]): AnalysisResult 
 
   for (const [low, high] of speedRanges) {
     const subset = processed.filter((r) => r.speed >= low && r.speed < high);
-    if (subset.length > 10) {
+    if (subset.length > 5) {
       const midSpeed = (low + high) / 2;
       const paceNum = 1000 / (midSpeed * 60);
 
@@ -197,11 +262,11 @@ export function calculateMetrics(processed: RunningDataPoint[]): AnalysisResult 
       paceBins.push({
         pace: formatPace(paceNum),
         paceNum,
-        gct: Math.round(mean(binGct)),
-        vo: mean(binVo).toFixed(2),
-        cadence: Math.round(mean(binCadence)),
-        sl: Math.round(mean(binSl)),
-        vr: mean(binVr).toFixed(2),
+        gct: binGct.length > 0 ? Math.round(mean(binGct)) : 0,
+        vo: binVo.length > 0 ? mean(binVo).toFixed(2) : 'N/A',
+        cadence: binCadence.length > 0 ? Math.round(mean(binCadence)) : 0,
+        sl: binSl.length > 0 ? Math.round(mean(binSl)) : 0,
+        vr: binVr.length > 0 ? mean(binVr).toFixed(2) : 'N/A',
         power: binPower.length > 0 ? Math.round(mean(binPower)) : undefined,
         formPower: binFormPower.length > 0 ? Math.round(mean(binFormPower)) : undefined,
         lss: binLss.length > 0 ? mean(binLss).toFixed(2) : undefined,
@@ -220,20 +285,20 @@ export function calculateMetrics(processed: RunningDataPoint[]): AnalysisResult 
 
   const splitAnalysis: SplitAnalysis = {
     firstQuarter: {
-      gct: mean(extractValues(q1, 'gct')),
-      vo: mean(extractValues(q1, 'vo')),
-      cadence: mean(extractValues(q1, 'cadence')),
-      vr: mean(extractValues(q1, 'vr')),
+      gct: gct.length > 0 ? mean(extractValues(q1, 'gct')) : 0,
+      vo: vo.length > 0 ? mean(extractValues(q1, 'vo')) : 0,
+      cadence: cadence.length > 0 ? mean(extractValues(q1, 'cadence')) : 0,
+      vr: vr.length > 0 ? mean(extractValues(q1, 'vr')) : 0,
       power: power.length > 0 ? mean(extractValues(q1, 'power')) : undefined,
       formPower: formPower.length > 0 ? mean(extractValues(q1, 'formPower')) : undefined,
       lss: lss.length > 0 ? mean(extractValues(q1, 'lss')) : undefined,
       hr: hr.length > 0 ? mean(extractValues(q1, 'hr')) : undefined,
     },
     lastQuarter: {
-      gct: mean(extractValues(q4, 'gct')),
-      vo: mean(extractValues(q4, 'vo')),
-      cadence: mean(extractValues(q4, 'cadence')),
-      vr: mean(extractValues(q4, 'vr')),
+      gct: gct.length > 0 ? mean(extractValues(q4, 'gct')) : 0,
+      vo: vo.length > 0 ? mean(extractValues(q4, 'vo')) : 0,
+      cadence: cadence.length > 0 ? mean(extractValues(q4, 'cadence')) : 0,
+      vr: vr.length > 0 ? mean(extractValues(q4, 'vr')) : 0,
       power: power.length > 0 ? mean(extractValues(q4, 'power')) : undefined,
       formPower: formPower.length > 0 ? mean(extractValues(q4, 'formPower')) : undefined,
       lss: lss.length > 0 ? mean(extractValues(q4, 'lss')) : undefined,
@@ -248,5 +313,6 @@ export function calculateMetrics(processed: RunningDataPoint[]): AnalysisResult 
     splitAnalysis,
     processed,
     hasStrydData,
+    hasRunningDynamics,
   };
 }
