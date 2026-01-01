@@ -290,6 +290,7 @@ export function ChartsTab({ data }: ChartsTabProps) {
             <YAxis
               dataKey="vr"
               domain={['dataMin - 1', 'dataMax + 1']}
+              tickFormatter={(v) => `${v.toFixed(1)}%`}
               label={{ value: 'VR (%)', angle: -90, position: 'insideLeft' }}
             />
             <Tooltip
@@ -319,6 +320,7 @@ export function ChartsTab({ data }: ChartsTabProps) {
             />
             <YAxis
               domain={[0, 10]}
+              tickFormatter={(v) => `${v}%`}
               label={{ value: 'VR (%)', angle: -90, position: 'insideLeft' }}
             />
             <Tooltip
@@ -488,6 +490,7 @@ export function ChartsTab({ data }: ChartsTabProps) {
                 dataKey="formPowerRatio"
                 name="Form Power Ratio"
                 domain={['dataMin - 2', 'dataMax + 2']}
+                tickFormatter={(v) => `${v.toFixed(0)}%`}
                 label={{ value: 'Form Power Ratio (%)', angle: -90, position: 'insideLeft' }}
               />
               <Tooltip
