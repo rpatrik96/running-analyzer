@@ -102,29 +102,29 @@ export function ChartsTab({ data }: ChartsTabProps) {
   return (
     <div className="space-y-6">
       {/* Filter controls */}
-      <div className="bg-white rounded-xl p-4 shadow-sm flex items-center justify-between">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm flex items-center justify-between">
         <label className="flex items-center gap-3 cursor-pointer">
           <input
             type="checkbox"
             checked={filterOutliers}
             onChange={(e) => setFilterOutliers(e.target.checked)}
-            className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+            className="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:bg-gray-700"
           />
-          <span className="text-sm text-gray-700">
+          <span className="text-sm text-gray-700 dark:text-gray-300">
             Filter outliers (very slow paces)
           </span>
         </label>
         {filterOutliers && outlierCount > 0 && (
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-gray-500 dark:text-gray-400">
             Hiding {outlierCount} points slower than {formatPace(paceThreshold)}/km
           </span>
         )}
       </div>
 
       {/* GCT over distance */}
-      <div className="bg-white rounded-xl p-6 shadow-sm">
-        <h3 className="font-semibold mb-4">Ground Contact Time Over Distance</h3>
-        <p className="text-xs text-gray-500 mb-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Ground Contact Time Over Distance</h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
           Tracks fatigue - rising GCT indicates declining neuromuscular efficiency
         </p>
         <ResponsiveContainer width="100%" height={300}>
@@ -150,14 +150,14 @@ export function ChartsTab({ data }: ChartsTabProps) {
       </div>
 
       {/* GCT vs Pace */}
-      <div className="bg-white rounded-xl p-6 shadow-sm">
-        <h3 className="font-semibold mb-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
           GCT vs Pace
-          <span className="ml-2 text-sm font-normal text-gray-500">
+          <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
             r = {correlations.gctSpeed.toFixed(3)}
           </span>
         </h3>
-        <p className="text-xs text-gray-500 mb-4">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
           Should be strongly positive (slower pace = more ground contact time)
         </p>
         <ResponsiveContainer width="100%" height={300}>
@@ -190,14 +190,14 @@ export function ChartsTab({ data }: ChartsTabProps) {
       </div>
 
       {/* Step Length vs Pace */}
-      <div className="bg-white rounded-xl p-6 shadow-sm">
-        <h3 className="font-semibold mb-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
           Step Length vs Pace
-          <span className="ml-2 text-sm font-normal text-gray-500">
+          <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
             r = {correlations.slSpeed.toFixed(3)}
           </span>
         </h3>
-        <p className="text-xs text-gray-500 mb-4">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
           Negative correlation indicates stride-length dominant running style
         </p>
         <ResponsiveContainer width="100%" height={300}>
@@ -228,14 +228,14 @@ export function ChartsTab({ data }: ChartsTabProps) {
       </div>
 
       {/* Cadence vs Pace */}
-      <div className="bg-white rounded-xl p-6 shadow-sm">
-        <h3 className="font-semibold mb-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
           Cadence vs Pace
-          <span className="ml-2 text-sm font-normal text-gray-500">
+          <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
             r = {correlations.cadenceSpeed.toFixed(3)}
           </span>
         </h3>
-        <p className="text-xs text-gray-500 mb-4">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
           Negative correlation indicates cadence-dominant running style
         </p>
         <ResponsiveContainer width="100%" height={300}>
@@ -266,14 +266,14 @@ export function ChartsTab({ data }: ChartsTabProps) {
       </div>
 
       {/* Vertical Ratio vs Pace */}
-      <div className="bg-white rounded-xl p-6 shadow-sm">
-        <h3 className="font-semibold mb-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
           Vertical Ratio vs Pace
-          <span className="ml-2 text-sm font-normal text-gray-500">
+          <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
             r = {correlations.vrSpeed.toFixed(3)}
           </span>
         </h3>
-        <p className="text-xs text-gray-500 mb-4">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
           Lower VR at all paces indicates better running economy
         </p>
         <ResponsiveContainer width="100%" height={300}>
@@ -305,9 +305,9 @@ export function ChartsTab({ data }: ChartsTabProps) {
       </div>
 
       {/* Vertical Ratio over distance */}
-      <div className="bg-white rounded-xl p-6 shadow-sm">
-        <h3 className="font-semibold mb-4">Vertical Ratio Over Distance (Efficiency)</h3>
-        <p className="text-xs text-gray-500 mb-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Vertical Ratio Over Distance (Efficiency)</h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
           Lower is better - measures how much energy goes up vs forward
         </p>
         <ResponsiveContainer width="100%" height={300}>
@@ -335,10 +335,10 @@ export function ChartsTab({ data }: ChartsTabProps) {
 
       {/* Power over distance (if Stryd data available) */}
       {hasStrydData && (
-        <div className="bg-white rounded-xl p-6 shadow-sm">
-          <h3 className="font-semibold mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
             Power Over Distance
-            <span className="ml-2 text-xs font-normal text-purple-600 bg-purple-50 px-2 py-1 rounded">
+            <span className="ml-2 text-xs font-normal text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30 px-2 py-1 rounded">
               Stryd
             </span>
           </h3>
@@ -366,17 +366,17 @@ export function ChartsTab({ data }: ChartsTabProps) {
 
       {/* Power vs Pace (if Stryd data available) */}
       {hasStrydData && (
-        <div className="bg-white rounded-xl p-6 shadow-sm">
-          <h3 className="font-semibold mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
             Power vs Pace
-            <span className="ml-2 text-sm font-normal text-gray-500">
+            <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
               r = {correlations.powerSpeed.toFixed(3)}
             </span>
-            <span className="ml-2 text-xs font-normal text-purple-600 bg-purple-50 px-2 py-1 rounded">
+            <span className="ml-2 text-xs font-normal text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30 px-2 py-1 rounded">
               Stryd
             </span>
           </h3>
-          <p className="text-xs text-gray-500 mb-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
             Power should increase at faster paces - shows efficiency of power application
           </p>
           <ResponsiveContainer width="100%" height={300}>
@@ -415,17 +415,17 @@ export function ChartsTab({ data }: ChartsTabProps) {
 
       {/* LSS vs Pace (if Stryd data available) */}
       {hasStrydData && correlations.lssSpeed !== 0 && (
-        <div className="bg-white rounded-xl p-6 shadow-sm">
-          <h3 className="font-semibold mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
             Leg Spring Stiffness vs Pace
-            <span className="ml-2 text-sm font-normal text-gray-500">
+            <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
               r = {correlations.lssSpeed.toFixed(3)}
             </span>
-            <span className="ml-2 text-xs font-normal text-purple-600 bg-purple-50 px-2 py-1 rounded">
+            <span className="ml-2 text-xs font-normal text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30 px-2 py-1 rounded">
               Stryd
             </span>
           </h3>
-          <p className="text-xs text-gray-500 mb-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
             Higher LSS at faster paces indicates better elastic energy return from muscles and tendons
           </p>
           <ResponsiveContainer width="100%" height={300}>
@@ -464,14 +464,14 @@ export function ChartsTab({ data }: ChartsTabProps) {
 
       {/* Form Power Ratio vs Pace (if Stryd data available) */}
       {hasStrydData && scatterData.some(d => d.formPowerRatio !== null) && (
-        <div className="bg-white rounded-xl p-6 shadow-sm">
-          <h3 className="font-semibold mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
             Form Power Ratio vs Pace
-            <span className="ml-2 text-xs font-normal text-purple-600 bg-purple-50 px-2 py-1 rounded">
+            <span className="ml-2 text-xs font-normal text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30 px-2 py-1 rounded">
               Stryd
             </span>
           </h3>
-          <p className="text-xs text-gray-500 mb-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
             Lower ratio at all paces is better - shows less energy wasted on vertical movement and braking
           </p>
           <ResponsiveContainer width="100%" height={300}>
@@ -511,8 +511,8 @@ export function ChartsTab({ data }: ChartsTabProps) {
 
       {/* Heart Rate over distance (if available) */}
       {data.summary.hr && (
-        <div className="bg-white rounded-xl p-6 shadow-sm">
-          <h3 className="font-semibold mb-4">Heart Rate Over Distance</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Heart Rate Over Distance</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />

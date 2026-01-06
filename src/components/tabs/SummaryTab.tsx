@@ -32,8 +32,8 @@ export function SummaryTab({ data }: SummaryTabProps) {
       </div>
 
       {/* Running Dynamics */}
-      <div className="bg-white rounded-xl p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Running Dynamics</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Running Dynamics</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <MetricCard
             label="Ground Contact Time"
@@ -78,10 +78,10 @@ export function SummaryTab({ data }: SummaryTabProps) {
 
       {/* Stryd Metrics */}
       {hasStrydData && (
-        <div className="bg-white rounded-xl p-6 shadow-sm">
-          <h2 className="text-lg font-semibold mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
             Power Metrics
-            <span className="ml-2 text-xs font-normal text-purple-600 bg-purple-50 px-2 py-1 rounded">
+            <span className="ml-2 text-xs font-normal text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30 px-2 py-1 rounded">
               Stryd
             </span>
           </h2>
@@ -157,48 +157,48 @@ export function SummaryTab({ data }: SummaryTabProps) {
 
       {/* Pace Bins Table */}
       {paceBins.length > 0 && (
-        <div className="bg-white rounded-xl p-6 shadow-sm overflow-x-auto">
-          <h2 className="text-lg font-semibold mb-4">Metrics by Pace</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm overflow-x-auto">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Metrics by Pace</h2>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b">
-                <th className="text-left py-2 px-3">Pace</th>
-                <th className="text-right py-2 px-3">GCT</th>
-                <th className="text-right py-2 px-3">VO</th>
-                <th className="text-right py-2 px-3">Cadence</th>
-                <th className="text-right py-2 px-3">SL</th>
-                <th className="text-right py-2 px-3">VR</th>
+              <tr className="border-b border-gray-200 dark:border-gray-700">
+                <th className="text-left py-2 px-3 text-gray-900 dark:text-gray-100">Pace</th>
+                <th className="text-right py-2 px-3 text-gray-900 dark:text-gray-100">GCT</th>
+                <th className="text-right py-2 px-3 text-gray-900 dark:text-gray-100">VO</th>
+                <th className="text-right py-2 px-3 text-gray-900 dark:text-gray-100">Cadence</th>
+                <th className="text-right py-2 px-3 text-gray-900 dark:text-gray-100">SL</th>
+                <th className="text-right py-2 px-3 text-gray-900 dark:text-gray-100">VR</th>
                 {hasStrydData && (
                   <>
-                    <th className="text-right py-2 px-3">Power</th>
-                    <th className="text-right py-2 px-3">LSS</th>
+                    <th className="text-right py-2 px-3 text-gray-900 dark:text-gray-100">Power</th>
+                    <th className="text-right py-2 px-3 text-gray-900 dark:text-gray-100">LSS</th>
                   </>
                 )}
-                <th className="text-right py-2 px-3">n</th>
+                <th className="text-right py-2 px-3 text-gray-900 dark:text-gray-100">n</th>
               </tr>
             </thead>
             <tbody>
               {paceBins.map((bin, i) => (
-                <tr key={i} className="border-b last:border-0 hover:bg-gray-50">
-                  <td className="py-2 px-3 font-medium">{bin.pace}/km</td>
-                  <td className="text-right py-2 px-3">{bin.gct} ms</td>
-                  <td className="text-right py-2 px-3">{bin.vo} cm</td>
-                  <td className="text-right py-2 px-3">{bin.cadence}</td>
-                  <td className="text-right py-2 px-3">{bin.sl} mm</td>
+                <tr key={i} className="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td className="py-2 px-3 font-medium text-gray-900 dark:text-gray-100">{bin.pace}/km</td>
+                  <td className="text-right py-2 px-3 text-gray-700 dark:text-gray-300">{bin.gct} ms</td>
+                  <td className="text-right py-2 px-3 text-gray-700 dark:text-gray-300">{bin.vo} cm</td>
+                  <td className="text-right py-2 px-3 text-gray-700 dark:text-gray-300">{bin.cadence}</td>
+                  <td className="text-right py-2 px-3 text-gray-700 dark:text-gray-300">{bin.sl} mm</td>
                   <td
                     className={`text-right py-2 px-3 ${
-                      parseFloat(bin.vr) < 6 ? 'text-green-600 font-medium' : ''
+                      parseFloat(bin.vr) < 6 ? 'text-green-600 dark:text-green-400 font-medium' : 'text-gray-700 dark:text-gray-300'
                     }`}
                   >
                     {bin.vr}%
                   </td>
                   {hasStrydData && (
                     <>
-                      <td className="text-right py-2 px-3">{bin.power ?? '-'} W</td>
-                      <td className="text-right py-2 px-3">{bin.lss ?? '-'}</td>
+                      <td className="text-right py-2 px-3 text-gray-700 dark:text-gray-300">{bin.power ?? '-'} W</td>
+                      <td className="text-right py-2 px-3 text-gray-700 dark:text-gray-300">{bin.lss ?? '-'}</td>
                     </>
                   )}
-                  <td className="text-right py-2 px-3 text-gray-400">{bin.count}</td>
+                  <td className="text-right py-2 px-3 text-gray-400 dark:text-gray-500">{bin.count}</td>
                 </tr>
               ))}
             </tbody>

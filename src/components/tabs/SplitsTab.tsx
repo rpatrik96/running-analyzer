@@ -52,21 +52,21 @@ export function SplitsTab({ data }: SplitsTabProps) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Fatigue Analysis (First vs Last Quarter)</h2>
-        <p className="text-sm text-gray-500 mb-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Fatigue Analysis (First vs Last Quarter)</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
           Compares running metrics from the first 25% to the last 25% of your run to assess fatigue
           impact.
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b">
-                <th className="text-left py-3 px-4">Metric</th>
-                <th className="text-right py-3 px-4">First Quarter</th>
-                <th className="text-right py-3 px-4">Last Quarter</th>
-                <th className="text-right py-3 px-4">Change</th>
-                <th className="text-center py-3 px-4">Status</th>
+              <tr className="border-b border-gray-200 dark:border-gray-700">
+                <th className="text-left py-3 px-4 text-gray-900 dark:text-gray-100">Metric</th>
+                <th className="text-right py-3 px-4 text-gray-900 dark:text-gray-100">First Quarter</th>
+                <th className="text-right py-3 px-4 text-gray-900 dark:text-gray-100">Last Quarter</th>
+                <th className="text-right py-3 px-4 text-gray-900 dark:text-gray-100">Change</th>
+                <th className="text-center py-3 px-4 text-gray-900 dark:text-gray-100">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -83,21 +83,21 @@ export function SplitsTab({ data }: SplitsTabProps) {
                 const isExcellent = lowerBetter ? change <= 0 : change >= 0;
 
                 return (
-                  <tr key={key} className="border-b last:border-0">
-                    <td className="py-3 px-4 font-medium">{label}</td>
-                    <td className="text-right py-3 px-4">
+                  <tr key={key} className="border-b border-gray-100 dark:border-gray-700 last:border-0">
+                    <td className="py-3 px-4 font-medium text-gray-900 dark:text-gray-100">{label}</td>
+                    <td className="text-right py-3 px-4 text-gray-700 dark:text-gray-300">
                       {(first as number).toFixed(1)} {unit}
                     </td>
-                    <td className="text-right py-3 px-4">
+                    <td className="text-right py-3 px-4 text-gray-700 dark:text-gray-300">
                       {(last as number).toFixed(1)} {unit}
                     </td>
                     <td
                       className={`text-right py-3 px-4 font-medium ${
                         isExcellent
-                          ? 'text-green-600'
+                          ? 'text-green-600 dark:text-green-400'
                           : isGood
-                          ? 'text-yellow-600'
-                          : 'text-red-600'
+                          ? 'text-yellow-600 dark:text-yellow-400'
+                          : 'text-red-600 dark:text-red-400'
                       }`}
                     >
                       {change >= 0 ? '+' : ''}
@@ -105,11 +105,11 @@ export function SplitsTab({ data }: SplitsTabProps) {
                     </td>
                     <td className="text-center py-3 px-4">
                       {isExcellent ? (
-                        <span className="text-green-600">Excellent</span>
+                        <span className="text-green-600 dark:text-green-400">Excellent</span>
                       ) : isGood ? (
-                        <span className="text-yellow-600">OK</span>
+                        <span className="text-yellow-600 dark:text-yellow-400">OK</span>
                       ) : (
-                        <span className="text-red-600">Degraded</span>
+                        <span className="text-red-600 dark:text-red-400">Degraded</span>
                       )}
                     </td>
                   </tr>
@@ -120,8 +120,8 @@ export function SplitsTab({ data }: SplitsTabProps) {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Fatigue Resistance Assessment</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Fatigue Resistance Assessment</h2>
         <div className="space-y-4">
           {(() => {
             const gctChange = splitAnalysis.lastQuarter.gct - splitAnalysis.firstQuarter.gct;
@@ -137,28 +137,28 @@ export function SplitsTab({ data }: SplitsTabProps) {
             if (score === 3) {
               assessment = {
                 level: 'Excellent',
-                color: 'bg-green-100 border-green-500 text-green-800',
+                color: 'bg-green-100 dark:bg-green-900/30 border-green-500 text-green-800 dark:text-green-300',
                 description:
                   'Your running form remained stable throughout the run. Minimal fatigue impact on mechanics.',
               };
             } else if (score === 2) {
               assessment = {
                 level: 'Good',
-                color: 'bg-blue-100 border-blue-500 text-blue-800',
+                color: 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 text-blue-800 dark:text-blue-300',
                 description:
                   'Minor form degradation detected. Your mechanics held up well under fatigue.',
               };
             } else if (score === 1) {
               assessment = {
                 level: 'Fair',
-                color: 'bg-yellow-100 border-yellow-500 text-yellow-800',
+                color: 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-500 text-yellow-800 dark:text-yellow-300',
                 description:
                   'Noticeable form changes in the final quarter. Consider pacing or endurance training.',
               };
             } else {
               assessment = {
                 level: 'Needs Work',
-                color: 'bg-red-100 border-red-500 text-red-800',
+                color: 'bg-red-100 dark:bg-red-900/30 border-red-500 text-red-800 dark:text-red-300',
                 description:
                   'Significant form degradation. Focus on building endurance and strength to maintain mechanics.',
               };
@@ -176,27 +176,27 @@ export function SplitsTab({ data }: SplitsTabProps) {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">What This Means</h2>
-        <div className="space-y-3 text-sm text-gray-600">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">What This Means</h2>
+        <div className="space-y-3 text-sm text-gray-600 dark:text-gray-300">
           <p>
-            <strong>GCT increase:</strong> Rising ground contact time indicates neuromuscular
+            <strong className="text-gray-900 dark:text-gray-100">GCT increase:</strong> Rising ground contact time indicates neuromuscular
             fatigue. Your muscles and nervous system are less able to produce the quick, powerful
             ground contacts needed for efficient running.
           </p>
           <p>
-            <strong>Cadence drop:</strong> Decreasing cadence often accompanies fatigue as your
+            <strong className="text-gray-900 dark:text-gray-100">Cadence drop:</strong> Decreasing cadence often accompanies fatigue as your
             neural drive decreases. Maintaining cadence while tired requires conscious effort and
             good training.
           </p>
           <p>
-            <strong>VR increase:</strong> A rising vertical ratio means you're "bouncing" more - a
+            <strong className="text-gray-900 dark:text-gray-100">VR increase:</strong> A rising vertical ratio means you're "bouncing" more - a
             sign that your stabilizing muscles are fatiguing and you're losing horizontal
             propulsion efficiency.
           </p>
           {hasStrydData && (
             <p>
-              <strong>LSS decrease:</strong> Dropping leg spring stiffness indicates reduced elastic
+              <strong className="text-gray-900 dark:text-gray-100">LSS decrease:</strong> Dropping leg spring stiffness indicates reduced elastic
               energy return from your tendons and muscles - they're no longer snapping back as
               efficiently.
             </p>

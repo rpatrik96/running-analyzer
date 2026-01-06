@@ -140,13 +140,13 @@ export function formatCorrelation(r: number): { value: string; strength: string;
 
   if (absR >= 0.7) {
     strength = 'Strong';
-    color = 'text-blue-600 bg-blue-50';
+    color = 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30';
   } else if (absR >= 0.4) {
     strength = 'Moderate';
-    color = 'text-yellow-600 bg-yellow-50';
+    color = 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/30';
   } else {
     strength = 'Weak';
-    color = 'text-gray-600 bg-gray-50';
+    color = 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800';
   }
 
   return {

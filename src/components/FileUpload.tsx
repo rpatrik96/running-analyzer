@@ -32,16 +32,16 @@ export function FileUpload({ onFileSelect, loading }: FileUploadProps) {
   }, []);
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
       <label className="block cursor-pointer">
         <div
           onDrop={handleDrop}
           onDragOver={handleDragOver}
-          className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors"
+          className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
         >
           <div className="text-center">
             <svg
-              className="mx-auto h-12 w-12 text-gray-400"
+              className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -53,10 +53,10 @@ export function FileUpload({ onFileSelect, loading }: FileUploadProps) {
                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
               />
             </svg>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
               {loading ? 'Processing...' : 'Click to upload or drag and drop'}
             </p>
-            <p className="text-xs text-gray-400">.FIT files from Garmin/Stryd</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">.FIT files from Garmin/Stryd</p>
           </div>
         </div>
         <input
