@@ -10,8 +10,8 @@ export function CorrelationsTab({ data }: CorrelationsTabProps) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Running Dynamics Correlations</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Running Dynamics Correlations</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <CorrelationBadge
             label="GCT vs Speed"
@@ -59,10 +59,10 @@ export function CorrelationsTab({ data }: CorrelationsTabProps) {
       </div>
 
       {hasStrydData && (
-        <div className="bg-white rounded-xl p-6 shadow-sm">
-          <h2 className="text-lg font-semibold mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
             Power Correlations
-            <span className="ml-2 text-xs font-normal text-purple-600 bg-purple-50 px-2 py-1 rounded">
+            <span className="ml-2 text-xs font-normal text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30 px-2 py-1 rounded">
               Stryd
             </span>
           </h2>
@@ -92,20 +92,20 @@ export function CorrelationsTab({ data }: CorrelationsTabProps) {
         </div>
       )}
 
-      <div className="bg-white rounded-xl p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Correlation Strength Reference</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Correlation Strength Reference</h2>
         <div className="flex flex-wrap gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-blue-100"></div>
-            <span className="text-sm">|r| {'>'} 0.7: Strong</span>
+            <div className="w-4 h-4 rounded bg-blue-100 dark:bg-blue-900/30"></div>
+            <span className="text-sm text-gray-700 dark:text-gray-300">|r| {'>'} 0.7: Strong</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-yellow-100"></div>
-            <span className="text-sm">0.4 {'<'} |r| {'<'} 0.7: Moderate</span>
+            <div className="w-4 h-4 rounded bg-yellow-100 dark:bg-yellow-900/30"></div>
+            <span className="text-sm text-gray-700 dark:text-gray-300">0.4 {'<'} |r| {'<'} 0.7: Moderate</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-gray-100"></div>
-            <span className="text-sm">|r| {'<'} 0.4: Weak</span>
+            <div className="w-4 h-4 rounded bg-gray-100 dark:bg-gray-700"></div>
+            <span className="text-sm text-gray-700 dark:text-gray-300">|r| {'<'} 0.4: Weak</span>
           </div>
         </div>
       </div>
